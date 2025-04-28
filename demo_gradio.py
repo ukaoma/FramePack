@@ -22,6 +22,7 @@ from diffusers_helper.utils import save_bcthw_as_mp4, crop_or_pad_yield_mask, so
 from diffusers_helper.models.hunyuan_video_packed import HunyuanVideoTransformer3DModelPacked
 from diffusers_helper.pipelines.k_diffusion_hunyuan import sample_hunyuan
 from diffusers_helper.memory import cpu, gpu, get_cuda_free_memory_gb, move_model_to_device_with_memory_preservation, offload_model_from_device_for_memory_preservation, fake_diffusers_current_device, DynamicSwapInstaller, unload_complete_models, load_model_as_complete
+import platform
 from diffusers_helper.thread_utils import AsyncStream, async_run
 from diffusers_helper.gradio.progress_bar import make_progress_bar_css, make_progress_bar_html
 from transformers import SiglipImageProcessor, SiglipVisionModel
@@ -43,7 +44,8 @@ args = parser.parse_args()
 
 print(args)
 
-if torch.cuda.is_available():
+device = gpu.type  # Define device variable before using it
+if device == 'cuda':
     free_mem_gb = get_cuda_free_memory_gb(gpu)
 else:
     free_mem_gb = torch.mps.recommended_max_memory() / 1024 / 1024 / 1024

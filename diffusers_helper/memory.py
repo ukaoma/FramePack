@@ -99,8 +99,19 @@ def empty_cache():
         torch.mps.empty_cache()
 
 def move_model_to_device_with_memory_preservation(model, target_device, preserved_memory_gb=0):
+    # Handle case where target_device is a string
+    if isinstance(target_device, str):
+        target_device = torch.device(target_device)
+    
     print(f'Moving {model.__class__.__name__} to {target_device} with preserved memory: {preserved_memory_gb} GB')
 
+    # For MPS devices, simply move the model
+    if target_device.type == 'mps':
+        model.to(device=target_device)
+        empty_cache()
+        return
+        
+    # For CUDA devices, use the original logic
     for m in model.modules():
         if get_cuda_free_memory_gb(target_device) <= preserved_memory_gb:
             empty_cache()
@@ -115,6 +126,10 @@ def move_model_to_device_with_memory_preservation(model, target_device, preserve
 
 
 def offload_model_from_device_for_memory_preservation(model, target_device, preserved_memory_gb=0):
+    # Handle case where target_device is a string
+    if isinstance(target_device, str):
+        target_device = torch.device(target_device)
+        
     print(f'Offloading {model.__class__.__name__} from {target_device} to preserve memory: {preserved_memory_gb} GB')
 
     if target_device.type == 'cuda':
